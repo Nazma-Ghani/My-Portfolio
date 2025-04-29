@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Registration - Portfolio</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="https://kit.fontawesome.com/dbdf219640.js" crossorigin="anonymous"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+    <style>
+        .register-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 30px;
+            background: #262626;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .register-title {
+            font-size: 36px;
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .register-subtitle {
+            color: #ababab;
+            margin-bottom: 30px;
+        }
+        
+        .register-form input {
+            width: 100%;
+            border: 0;
+            outline: none;
+            background: #333;
+            padding: 15px;
+            margin: 15px 0;
+            color: white;
+            font-size: 18px;
+            border-radius: 6px;
+        }
+        
+        .register-btn {
+            display: inline-block;
+            background: mediumvioletred;
+            border: 1px solid mediumvioletred;
+            padding: 14px 50px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: white;
+            margin-top: 20px;
+            cursor: pointer;
+            transition: background 0.5s;
+            font-size: 18px;
+            border: none;
+        }
+        
+        .register-btn:hover {
+            background: #c71585;
+        }
+        
+        .register-error {
+            color: #f44336;
+            margin-top: 15px;
+        }
+        
+        .register-success {
+            color: #4CAF50;
+            margin-top: 15px;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #ababab;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            color: mediumvioletred;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <img src="images/Screenshot 2024-09-16 at 11.16.04 PM.png" class="logo">
+            <ul id="sidemenu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#services">Services</a></li>
+                <li><a href="index.html#portfolio">Portfolio</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+                <i class="fa-solid fa-xmark" onclick="closemenu()"></i>
+            </ul>
+            <i class="fa-solid fa-bars" onclick="openmenu()"></i>
+        </nav>
+    </div>
+
+    <div class="register-container">
+        <h1 class="register-title">Admin Registration</h1>
+        <p class="register-subtitle">Create an admin account to access the dashboard</p>
+        
+        <form id="register-form" class="register-form">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password (at least 6 characters)" required minlength="6">
+            <input type="password" id="confirm-password" placeholder="Confirm Password" required minlength="6">
+            <button type="submit" class="register-btn">Register</button>
+        </form>
+        
+        <div id="register-error" class="register-error"></div>
+        <div id="register-success" class="register-success"></div>
+        
+        <div style="margin-top: 30px;">
+            <a href="admin.html" class="back-link">
+                <i class="fa-solid fa-arrow-left"></i> Back to Admin Login
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase with your configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyD3q9E0XPHf0TLkF8cLMbGLZ4MGxHyVUUY",
+          authDomain: "portfolio-ef1f8.firebaseapp.com",
+          projectId: "portfolio-ef1f8",
+          storageBucket: "portfolio-ef1f8.appspot.com",
+          messagingSenderId: "356340041556",
+          appId: "1:356340041556:web:3c3a2ea2734a0757b06ac1"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Enable analytics if needed
+        firebase.analytics && firebase.analytics();
+        
+        // Get reference to Firebase Auth
+        const auth = firebase.auth();
+        
+        // DOM elements
+        const registerForm = document.getElementById('register-form');
+        const registerError = document.getElementById('register-error');
+        const registerSuccess = document.getElementById('register-success');
+        
+        // Handle registration form submission
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            // Clear previous messages
+            registerError.textContent = '';
+            registerSuccess.textContent = '';
+            
+            // Check if passwords match
+            if (password !== confirmPassword) {
+                registerError.textContent = 'Passwords do not match';
+                return;
+            }
+            
+            // Create user with email and password
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Registration successful
+                    const user = userCredential.user;
+                    registerSuccess.textContent = 'Registration successful! You can now log in to the admin dashboard.';
+                    registerForm.reset();
+                    
+                    // Automatically redirect to admin login page after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = 'admin.html';
+                    }, 3000);
+                })
+                .catch((error) => {
+                    // Registration failed
+                    console.error('Registration error:', error);
+                    registerError.textContent = error.message;
+                });
+        });
+        
+        // Mobile menu functions
+        var sidemenu = document.getElementById("sidemenu");
+        function openmenu(){
+            sidemenu.style.right = "0";
+        }
+        function closemenu(){
+            sidemenu.style.right = "-200px";
+        }
+    </script>
+</body>
+</html>

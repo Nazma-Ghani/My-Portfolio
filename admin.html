@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard - Portfolio</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="https://kit.fontawesome.com/dbdf219640.js" crossorigin="anonymous"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+    <style>
+        .admin-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #262626;
+            border-radius: 10px;
+        }
+        
+        .login-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 30px;
+            background: #262626;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .admin-title {
+            font-size: 32px;
+            color: white;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-email {
+            color: #ababab;
+        }
+        
+        .logout-btn {
+            background: transparent;
+            border: 1px solid mediumvioletred;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: mediumvioletred;
+        }
+        
+        .data-container {
+            display: none;
+        }
+        
+        .data-section {
+            margin-bottom: 30px;
+        }
+        
+        .data-title {
+            font-size: 24px;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th, .data-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        
+        .data-table th {
+            background-color: #333;
+            color: white;
+        }
+        
+        .data-table tr:hover {
+            background-color: #333;
+        }
+        
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            border: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .tab.active {
+            background: mediumvioletred;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #ababab;
+            text-decoration: none;
+        }
+        
+        .back-link:hover {
+            color: mediumvioletred;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <img src="images/Screenshot 2024-09-16 at 11.16.04 PM.png" class="logo">
+            <ul id="sidemenu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#about">About</a></li>
+                <li><a href="index.html#services">Services</a></li>
+                <li><a href="index.html#portfolio">Portfolio</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+                <i class="fa-solid fa-xmark" onclick="closemenu()"></i>
+            </ul>
+            <i class="fa-solid fa-bars" onclick="openmenu()"></i>
+        </nav>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-section" class="login-container">
+        <h2 class="sub-title" style="font-size: 36px;">Admin Login</h2>
+        <p style="color: #ababab; margin-bottom: 30px;">Please login to access the admin dashboard</p>
+        
+        <form id="login-form">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit" class="btn btn2">Login</button>
+        </form>
+        
+        <div id="login-error" style="color: #f44336; margin-top: 15px;"></div>
+        
+        <div style="margin-top: 20px;">
+            <a href="index.html" class="back-link" style="margin-right: 20px;">
+                <i class="fa-solid fa-arrow-left"></i> Back to Home
+            </a>
+            <a href="admin-register.html" class="back-link">
+                <i class="fa-solid fa-user-plus"></i> Register New Admin
+            </a>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-section" class="admin-container" style="display: none;">
+        <div class="admin-header">
+            <h1 class="admin-title">Admin Dashboard</h1>
+            <div class="user-info">
+                <span id="user-email" class="user-email"></span>
+                <button id="logout-btn" class="logout-btn">Logout</button>
+            </div>
+        </div>
+        
+        <div class="tab-container">
+            <button class="tab active" data-tab="users">Authentication Users</button>
+            <button class="tab" data-tab="messages">Contact Messages</button>
+        </div>
+        
+        <div id="users-tab" class="tab-content active">
+            <div class="data-section">
+                <h2 class="data-title">Authentication Users</h2>
+                <div id="users-loading" style="color: #ababab;">Loading users data...</div>
+                <table id="users-table" class="data-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>User ID</th>
+                            <th>Created</th>
+                            <th>Last Sign In</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-data">
+                        <!-- User data will be inserted here -->
+                    </tbody>
+                </table>
+                <div id="no-users" style="color: #ababab; display: none;">No users found.</div>
+            </div>
+        </div>
+        
+        <div id="messages-tab" class="tab-content">
+            <div class="data-section">
+                <h2 class="data-title">Contact Form Messages</h2>
+                <div id="messages-loading" style="color: #ababab;">Loading messages...</div>
+                <table id="messages-table" class="data-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Message</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="messages-data">
+                        <!-- Message data will be inserted here -->
+                    </tbody>
+                </table>
+                <div id="no-messages" style="color: #ababab; display: none;">No messages found.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase with your configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyD3q9E0XPHf0TLkF8cLMbGLZ4MGxHyVUUY",
+          authDomain: "portfolio-ef1f8.firebaseapp.com",
+          projectId: "portfolio-ef1f8",
+          storageBucket: "portfolio-ef1f8.appspot.com",
+          messagingSenderId: "356340041556",
+          appId: "1:356340041556:web:3c3a2ea2734a0757b06ac1"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Enable analytics if needed
+        firebase.analytics && firebase.analytics();
+        
+        // Get references to Firebase services
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // DOM elements
+        const loginSection = document.getElementById('login-section');
+        const adminSection = document.getElementById('admin-section');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        const userEmail = document.getElementById('user-email');
+        const logoutBtn = document.getElementById('logout-btn');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        // Handle login form submission
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            loginError.textContent = '';
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    console.error('Login error:', error);
+                    loginError.textContent = error.message;
+                });
+        });
+        
+        // Handle logout
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+        });
+        
+        // Handle tab switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                tabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+        
+        // Auth state change listener
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in
+                loginSection.style.display = 'none';
+                adminSection.style.display = 'block';
+                userEmail.textContent = user.email;
+                
+                // Load data
+                loadUsers();
+                loadMessages();
+            } else {
+                // User is signed out
+                loginSection.style.display = 'block';
+                adminSection.style.display = 'none';
+                loginForm.reset();
+            }
+        });
+        
+        // Load authentication users data
+        function loadUsers() {
+            const usersLoading = document.getElementById('users-loading');
+            const usersTable = document.getElementById('users-table');
+            const noUsers = document.getElementById('no-users');
+            const usersData = document.getElementById('users-data');
+            
+            // In a real application, you would use Firebase Admin SDK or Cloud Functions
+            // to get all users. For this demo, we'll simulate with a limited approach
+            // that only shows the current user (since client-side Firebase Auth doesn't
+            // provide a way to list all users)
+            
+            usersLoading.style.display = 'block';
+            usersTable.style.display = 'none';
+            noUsers.style.display = 'none';
+            
+            const currentUser = auth.currentUser;
+            
+            if (currentUser) {
+                const userData = `
+                    <tr>
+                        <td>${currentUser.email}</td>
+                        <td>${currentUser.uid}</td>
+                        <td>${new Date(currentUser.metadata.creationTime).toLocaleString()}</td>
+                        <td>${new Date(currentUser.metadata.lastSignInTime).toLocaleString()}</td>
+                    </tr>
+                `;
+                
+                usersData.innerHTML = userData;
+                usersLoading.style.display = 'none';
+                usersTable.style.display = 'table';
+            } else {
+                usersLoading.style.display = 'none';
+                noUsers.style.display = 'block';
+            }
+        }
+        
+        // Load contact messages data
+        function loadMessages() {
+            const messagesLoading = document.getElementById('messages-loading');
+            const messagesTable = document.getElementById('messages-table');
+            const noMessages = document.getElementById('no-messages');
+            const messagesData = document.getElementById('messages-data');
+            
+            messagesLoading.style.display = 'block';
+            messagesTable.style.display = 'none';
+            noMessages.style.display = 'none';
+            
+            db.collection("contactMessages")
+                .orderBy("timestamp", "desc")
+                .get()
+                .then((querySnapshot) => {
+                    messagesLoading.style.display = 'none';
+                    
+                    if (querySnapshot.empty) {
+                        noMessages.style.display = 'block';
+                        return;
+                    }
+                    
+                    let messagesHTML = '';
+                    
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        const date = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString() : 'N/A';
+                        
+                        messagesHTML += `
+                            <tr>
+                                <td>${data.Name || 'N/A'}</td>
+                                <td>${data.Email || 'N/A'}</td>
+                                <td>${data.Message || 'N/A'}</td>
+                                <td>${date}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    messagesData.innerHTML = messagesHTML;
+                    messagesTable.style.display = 'table';
+                })
+                .catch((error) => {
+                    console.error("Error getting messages: ", error);
+                    messagesLoading.style.display = 'none';
+                    noMessages.textContent = "Error loading messages: " + error.message;
+                    noMessages.style.display = 'block';
+                });
+        }
+        
+        // Mobile menu functions
+        var sidemenu = document.getElementById("sidemenu");
+        function openmenu(){
+            sidemenu.style.right = "0";
+        }
+        function closemenu(){
+            sidemenu.style.right = "-200px";
+        }
+    </script>
+</body>
+</html>
